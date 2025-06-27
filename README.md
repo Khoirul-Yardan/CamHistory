@@ -27,6 +27,6 @@ Ini adalah proyek web gratis yang memungkinkan kamu:
 
 ## Konsep
 
-Dibuat untuk generate seuatu cerpen dari gambar sekitar diharapkan untuk membuat seseorang lebih kreatif dan imajinatif jadi sebagai dasaran ide untuk dikembangkan lebih lanjut
+Dibuat untuk generate seuatu cerpen dari gambar sekitar diharapkan untuk membuat seseorang lebih kreatif dan imajinatif jadi sebagai dasaran ide untuk dikembangkan lebih lanjut.
 
 **Dibuat Oleh [Khoirul Yardan]**
