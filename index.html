@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ceritain Gambar!</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f3f3f3; padding: 20px; }
+    video, canvas { max-width: 100%; border: 1px solid #ccc; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    #result { margin-top: 20px; white-space: pre-line; background: #fff; padding: 15px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+  <h1>Ceritain Gambar Kamu 📷✨</h1>
+  <video id="video" autoplay playsinline></video>
+  <br>
+  <button onclick="takePicture()">📸 Ambil Foto</button>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <br>
+  <button onclick="generateStory()">🔮 Ceritakan Gambar</button>
+
+  <div id="result">Hasil cerita akan muncul di sini...</div>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const resultDiv = document.getElementById('result');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream });
+
+    function takePicture() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      canvas.style.display = 'block';
+    }
+
+    async function generateStory() {
+      resultDiv.textContent = '⏳ Mengambil deskripsi gambar...';
+
+      // 1. Convert canvas to Blob
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+      
+      // 2. Upload ke HuggingFace untuk image caption (gratis)
+      const formData = new FormData();
+      formData.append('image', blob, 'photo.jpg');
+
+      const hfResponse = await fetch('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer hf_your_token_di_sini'
+        },
+        body: formData
+      });
+
+      const hfResult = await hfResponse.json();
+      const caption = hfResult[0]?.generated_text || "Gambar tanpa deskripsi.";
+      resultDiv.textContent = `📝 Deskripsi: ${caption}\n\n⏳ Mengubah deskripsi menjadi cerita...`;
+
+      // 3. Kirim caption ke AI teks (via OpenRouter atau alternatif)
+      const storyResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer openrouter_your_token_di_sini',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "mistralai/mistral-7b-instruct",
+          messages: [
+            { role: "system", content: "Kamu adalah penulis cerpen kreatif." },
+            { role: "user", content: `Buatkan cerpen pendek dari deskripsi gambar berikut: "${caption}". Ceritanya harus menyentuh, mengandung perasaan atau konflik manusia.` }
+          ]
+        })
+      });
+
+      const storyResult = await storyResponse.json();
+      const story = storyResult.choices[0]?.message?.content || "Gagal membuat cerita.";
+      resultDiv.textContent = story;
+    }
+  </script>
+</body>
+</html>
